@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Database Connection
+//  Database Connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -18,22 +18,22 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error("❌ Database connection failed:", err.message);
+    console.error(" Database connection failed:", err.message);
     return;
   }
-  console.log("✅ Connected to MySQL database");
+  console.log(" Connected to MySQL database");
 });
 
-// ✅ Example Route to Check Connection
+//  Example Route to Check Connection
 app.get("/", (req, res) => {
   res.send("Server is running...");
 });
 
-// ✅ Fetch Customers (Example API)
+//  Fetch Customers (Example API)
 app.get("/customers", (req, res) => {
   db.query("SELECT * FROM customers", (err, results) => {
     if (err) {
-      console.error("❌ Error fetching customers:", err);
+      console.error(" Error fetching customers:", err);
       res.status(500).json({ error: "Database error" });
     } else {
       res.json(results);
@@ -41,6 +41,6 @@ app.get("/customers", (req, res) => {
   });
 });
 
-// ✅ Start Server
+//  Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
