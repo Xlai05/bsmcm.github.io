@@ -1,14 +1,13 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-
-const Home = () => <h2>Home Page</h2>;
-const Orders = () => <h2>Orders</h2>;
-const Customers = () => <h2>Customers</h2>;
-const Inventory = () => <h2>Inventory</h2>;
-const Suppliers = () => <h2>Suppliers</h2>;
-const EmployeeManagement = () => <h2>Employee Management</h2>;
-const SalesReport = () => <h2>Sales Report</h2>;
-const Settings = () => <h2>Settings</h2>;
+import Home from "./pages/Home";
+import Orders from "./pages/Orders";
+import Customers from "./pages/Customers";
+import Inventory from "./pages/Inventory";
+import Suppliers from "./pages/Suppliers";
+import EmployeeManagement from "./pages/EmployeeManagement";
+import SalesReport from "./pages/SalesReport";
+import Settings from "./pages/Settings";
 
 const App = () => {
   return (
