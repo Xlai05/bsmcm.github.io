@@ -13,7 +13,6 @@ app.use(cors({
   credentials: true
 }));
 
-
 // Middleware to parse JSON
 app.use(express.json());
 
@@ -24,7 +23,6 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE
 });
-
 
 db.connect(err => {
     if (err) {
@@ -57,6 +55,31 @@ app.post('/login', (req, res) => {
         }
 
         return res.json({ success: true, message: "Login successful", role: user.Role });
+    });
+});
+
+// Add Employee Route
+app.post('/add-employee', (req, res) => {
+    const { fullName, contact, address, username, password, role } = req.body;
+    const sql = `INSERT INTO employees (EmployeeName, Contact, Address, UserName, Password, Role) VALUES (?, ?, ?, ?, ?, ?)`;
+    const params = [fullName, contact, address, username, password, role];
+    db.query(sql, params, (err, result) => {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.json({ message: 'Employee added successfully!', id: result.insertId });
+    });
+});
+
+// Remove Employee Route
+app.post('/remove-employee', (req, res) => {
+    const { username } = req.body;
+    const sql = `DELETE FROM employees WHERE UserName = ?`;
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            return res.status(400).json({ error: err.message });
+        }
+        res.json({ message: 'Employee removed successfully!' });
     });
 });
 
