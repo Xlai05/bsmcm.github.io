@@ -83,6 +83,29 @@ app.post('/remove-employee', (req, res) => {
     });
 });
 
+// Fetch Employees Route
+app.get('/employees', (req, res) => {
+    const sql = `SELECT * FROM employees`;
+    db.query(sql, (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(result);
+    });
+});
+
+// Fetch Single Employee Route
+app.get('/employees/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = `SELECT * FROM employees WHERE Employee_ID = ?`;
+    db.query(sql, [id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(result[0]);
+    });
+});
+
 // Start Server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

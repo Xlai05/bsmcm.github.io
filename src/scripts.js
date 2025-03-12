@@ -77,6 +77,7 @@ function setupEventListeners() {
         .then(data => {
             alert('Employee added successfully!');
             event.target.reset();
+            loadEmployees(); // Reload the employee list
         })
         .catch(error => {
             console.error('Error:', error);
@@ -99,6 +100,7 @@ function setupEventListeners() {
         .then(data => {
             alert('Employee removed successfully!');
             event.target.reset();
+            loadEmployees(); // Reload the employee list
         })
         .catch(error => {
             console.error('Error:', error);
@@ -116,6 +118,7 @@ function setupEventListeners() {
 
     document.querySelector('a[onclick="toggleEmployeeManagement()"]').addEventListener('click', function() {
         showSection('employee-management');
+        loadEmployees(); // Load employees when Employee Management is clicked
     });
 }
 
@@ -148,6 +151,57 @@ function toggleRemoveEmployeeForm() {
     const removeEmployeeForm = document.getElementById('remove-employee-form');
     removeEmployeeForm.classList.toggle('hidden');
     addEmployeeForm.classList.add('hidden');
+}
+
+// Load employees from the database and display them
+function loadEmployees() {
+    fetch('http://localhost:3000/employees')
+        .then(response => response.json())
+        .then(data => {
+            const employeeList = document.getElementById('employee-list');
+            employeeList.innerHTML = ''; // Clear the list
+            data.forEach(employee => {
+                const employeeCard = document.createElement('div');
+                employeeCard.className = 'bg-white p-4 rounded-lg shadow-lg';
+                employeeCard.innerHTML = `
+                    <h3 class="text-lg font-bold">${employee.EmployeeName}</h3>
+                    <p>Contact: ${employee.Contact}</p>
+                    <p>Address: ${employee.Address}</p>
+                    <p>Username: ${employee.UserName}</p>
+                    <p>Role: ${employee.Role}</p>
+                    <button class="bg-blue-500 text-white px-4 py-2 rounded mt-2" onclick="viewEmployeeProfile(${employee.Employee_ID})">View Profile</button>
+                `;
+                employeeList.appendChild(employeeCard);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// View employee profile
+function viewEmployeeProfile(employeeId) {
+    fetch(`http://localhost:3000/employees/${employeeId}`)
+        .then(response => response.json())
+        .then(data => {
+            const employeeProfileContent = document.getElementById('employee-profile-content');
+            employeeProfileContent.innerHTML = `
+                <h3 class="text-lg font-bold">${data.EmployeeName}</h3>
+                <p>Contact: ${data.Contact}</p>
+                <p>Address: ${data.Address}</p>
+                <p>Username: ${data.UserName}</p>
+                <p>Role: ${data.Role}</p>
+            `;
+            document.getElementById('employee-profile').classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// Close employee profile
+function closeEmployeeProfile() {
+    document.getElementById('employee-profile').classList.add('hidden');
 }
 
 // Toggle Settings Menu on Click
