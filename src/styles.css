@@ -1,0 +1,14 @@
+body {
+    background-color: #e0f7fa;
+    font-family: Arial, sans-serif;
+}
+.nav {
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+.settings-menu {
+    position: relative;
+}
+#settings-dropdown {
+    z-index: 50;
+}
