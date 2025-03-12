@@ -1,56 +1,66 @@
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql2");
-const cors = require("cors");
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql');
 
 const app = express();
-app.use(express.json());
-app.use(cors());
+const port = process.env.PORT || 3000;
 
-// Use a Connection Pool for Stability
-const db = mysql.createPool({
-  connectionLimit: 10, // Prevent too many open connections
+// CORS setup
+app.use(cors({
+  origin: ["http://127.0.0.1:5500", "http://localhost:5500"], // Allow frontend to access backend
+  methods: ["POST", "GET"],
+  credentials: true
+}));
+
+
+// Middleware to parse JSON
+app.use(express.json());
+
+// Database Connection
+const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
-  waitForConnections: true,
-  queueLimit: 0,
+  database: process.env.DB_DATABASE
 });
 
-// Handle Database Connection Errors
-db.getConnection((err, connection) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err.message);
-    process.exit(1);
-  } else {
-    console.log("✅ Connected to MySQL database");
-    connection.release(); // Release connection back to pool
-  }
-});
 
-// Keep Connection Alive
-setInterval(() => {
-  db.query("SELECT 1", (err) => {
-    if (err) console.error("⚠️ MySQL keep-alive error:", err.message);
-  });
-}, 30000);
-
-// Example Route to Check Server
-app.get("/", (req, res) => res.send("🚀 Server is running..."));
-
-// Fetch Customers (Using Pool)
-app.get("/customers", (req, res) => {
-  db.query("SELECT * FROM customers", (err, results) => {
+db.connect(err => {
     if (err) {
-      console.error("❌ Error fetching customers:", err.message);
-      return res.status(500).json({ error: "Database error" });
+        console.error('Database connection failed: ', err);
+        return;
     }
-    res.json(results);
-  });
+    console.log('Connected to MySQL Database');
+});
+
+// Login Route
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.json({ success: false, message: "Missing username or password" });
+    }
+
+    const sql = "SELECT * FROM employees WHERE UserName = ?";
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).json({ success: false, message: "Database error" });
+        }
+        if (result.length === 0) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        const user = result[0];
+        if (user.Password !== password) {
+            return res.json({ success: false, message: "Invalid credentials" });
+        }
+
+        return res.json({ success: true, message: "Login successful", role: user.Role });
+    });
 });
 
 // Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
