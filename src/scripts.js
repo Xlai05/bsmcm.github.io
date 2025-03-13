@@ -194,14 +194,22 @@ function handleChangePassword(event) {
 
 // Show a specific section and hide others
 function showSection(sectionId) {
-    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management',];
+    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management', 'sales-report-section'];
     sections.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             if (id === sectionId) {
                 element.classList.remove('hidden');
+                // For sales-report-section which uses style.display
+                if (id === 'sales-report-section') {
+                    element.style.display = "block";
+                }
             } else {
                 element.classList.add('hidden');
+                // For sales-report-section which uses style.display
+                if (id === 'sales-report-section') {
+                    element.style.display = "none";
+                }
             }
         }
     });
@@ -286,8 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Function to toggle the sales report section
 function toggleSalesReport() {
-    const section = document.getElementById("sales-report-section");
-    section.style.display = section.style.display === "none" ? "block" : "none";
+    showSection('sales-report-section');
 }
 
 // Function to fetch sales data from the server
