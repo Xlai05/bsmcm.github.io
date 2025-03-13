@@ -58,6 +58,11 @@ app.post('/login', (req, res) => {
     });
 });
 
+// Logout Route
+app.post('/logout', (req, res) => {
+    res.json({ success: true, message: "Logged out successfully" });
+});
+
 // Add Employee Route
 app.post('/add-employee', (req, res) => {
     const { fullName, contact, address, username, password, role } = req.body;
@@ -74,12 +79,20 @@ app.post('/add-employee', (req, res) => {
 // Remove Employee Route
 app.post('/remove-employee', (req, res) => {
     const { username } = req.body;
-    const sql = `DELETE FROM employees WHERE UserName = ?`;
+
+    if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+    }
+
+    const sql = `DELETE FROM employees WHERE LOWER(UserName) = LOWER(?)`;
     db.query(sql, [username], (err, result) => {
         if (err) {
             return res.status(400).json({ error: err.message });
         }
-        res.json({ message: 'Employee removed successfully!' });
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+        res.json({ success: true, message: 'Employee removed successfully!' });
     });
 });
 
@@ -124,18 +137,46 @@ app.get('/sales-report', (req, res) => {
 
     db.query(query, [date], (err, results) => {
         if (err) {
-            console.error('Database error:', err);
             return res.status(500).json({ error: err.message });
         }
-    
-        console.log('Query results:', results); // Log the results
     
         if (results.length === 0) {
             return res.json({ message: 'No sales data found for the selected date.' });
         }
     
-        console.log('Sending response to frontend:', JSON.stringify(results)); // Log before sending
         res.json(results);
+    });
+});
+
+// Change Password Route
+app.post('/change-password', (req, res) => {
+    const { username, currentPassword, newPassword } = req.body;
+
+    if (!username || !currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const sqlSelect = "SELECT * FROM employees WHERE UserName = ?";
+    db.query(sqlSelect, [username], (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: "Database error" });
+        }
+        if (result.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = result[0];
+        if (user.Password !== currentPassword) {
+            return res.status(400).json({ message: "Current password is incorrect" });
+        }
+
+        const sqlUpdate = "UPDATE employees SET Password = ? WHERE UserName = ?";
+        db.query(sqlUpdate, [newPassword, username], (err, result) => {
+            if (err) {
+                return res.status(500).json({ message: "Database error" });
+            }
+            res.json({ message: "Password changed successfully" });
+        });
     });
 });
 
