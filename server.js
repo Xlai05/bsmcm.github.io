@@ -106,6 +106,39 @@ app.get('/employees/:id', (req, res) => {
     });
 });
 
+// Sales Report Route
+app.get('/sales-report', (req, res) => {
+    const date = req.query.date;
+    console.log(`Received request for date: ${date} Type: daily`);
+
+    const query = `
+        SELECT 
+            p.ProductName AS product_name, 
+            SUM(o.quantity) AS total_sold 
+        FROM orders o
+        JOIN productdetails p ON o.product_id = p.Product_ID
+        WHERE o.Date = ?
+        GROUP BY o.product_id
+        ORDER BY total_sold DESC;
+    `;
+
+    db.query(query, [date], (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ error: err.message });
+        }
+    
+        console.log('Query results:', results); // Log the results
+    
+        if (results.length === 0) {
+            return res.json({ message: 'No sales data found for the selected date.' });
+        }
+    
+        console.log('Sending response to frontend:', JSON.stringify(results)); // Log before sending
+        res.json(results);
+    });
+});
+
 // Start Server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

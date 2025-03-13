@@ -120,6 +120,15 @@ function setupEventListeners() {
         showSection('employee-management');
         loadEmployees(); // Load employees when Employee Management is clicked
     });
+
+    // Add onclick event for the "View Report" button
+    const viewReportButton = document.getElementById("view-report-button");
+    if (viewReportButton) {
+        viewReportButton.addEventListener("click", function() {
+            toggleSalesReport();
+            fetchSalesData();
+        });
+    }
 }
 
 // Show a specific section and hide others
@@ -212,7 +221,141 @@ function toggleSettings() {
     }
 }
 
+// Ensure the report section is hidden initially
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("sales-report-section").style.display = "none";
+});
+
+// Function to toggle the sales report section
+function toggleSalesReport() {
+    const section = document.getElementById("sales-report-section");
+    section.style.display = section.style.display === "none" ? "block" : "none";
+}
+
+// Function to fetch sales data from the server
+function fetchSalesData() {
+    const dateInput = document.getElementById('datePicker');
+    const selectedDate = dateInput.value; // Get selected date from input
+
+    if (!selectedDate) {
+        alert("Please select a date.");
+        return;
+    }
+
+    fetch(`http://localhost:3000/sales-report?date=${selectedDate}&type=daily`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Received data from API:', data); // Debug log
+
+            if (data.message) {
+                document.getElementById('salesReport').innerText = data.message; 
+            } else {
+                let output = data.map(row => `${row.product_name}: ${row.total_sold}`).join('<br>');
+                document.getElementById('salesReport').innerHTML = output;
+
+                // Update the chart with the sales data
+                updateChart(data);
+            }
+        })
+        .catch(error => console.error('Error fetching data:', error));
+
+    // Fetch orders sold on the selected date
+    fetch(`http://localhost:3000/orders?date=${selectedDate}&type=daily`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Received orders data from API:', data); // Debug log
+
+            const ordersList = document.getElementById('ordersList');
+            if (data.message) {
+                ordersList.innerText = data.message; 
+            } else {
+                let output = data.map(order => `Order ID: ${order.order_id}, Product: ${order.product_name}, Quantity: ${order.quantity}`).join('<br>');
+                ordersList.innerHTML = output;
+            }
+        })
+        .catch(error => console.error('Error fetching orders data:', error));
+}
+
+// Function to update the sales chart
+let salesChart;
+function updateChart(salesData) {
+    const ctx = document.getElementById("salesChart").getContext("2d");
+
+    // Extract labels (product names) and data (quantity sold)
+    const labels = salesData.map(item => item.product_name);
+    const quantities = salesData.map(item => item.total_sold);
+
+    // Destroy existing chart before creating a new one
+    if (salesChart) {
+        salesChart.destroy();
+    }
+
+    salesChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Products Sold",
+                data: quantities,
+                backgroundColor: [
+                    "rgba(255, 99, 132, 0.5)",
+                    "rgba(54, 162, 235, 0.5)",
+                    "rgba(255, 206, 86, 0.5)",
+                    "rgba(75, 192, 192, 0.5)",
+                    "rgba(153, 102, 255, 0.5)",
+                    "rgba(255, 159, 64, 0.5)"
+                ],
+                borderColor: [
+                    "rgba(255, 99, 132, 1)",
+                    "rgba(54, 162, 235, 1)",
+                    "rgba(255, 206, 86, 1)",
+                    "rgba(75, 192, 192, 1)",
+                    "rgba(153, 102, 255, 1)",
+                    "rgba(255, 159, 64, 1)"
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+
 // Run event listener setup when DOM loads
 document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const dateInput = document.getElementById('datePicker'); // Assuming user selects a date
+    const salesReportDiv = document.getElementById('salesReport');
+
+    if (!dateInput || !salesReportDiv) {
+        console.error('Missing elements in HTML.');
+        return;
+    }
+
+    dateInput.addEventListener('change', function () {
+        const selectedDate = dateInput.value; // Get selected date from input
+        if (!selectedDate) return;
+
+        fetch(`http://localhost:3000/sales-report?date=${selectedDate}&type=daily`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received data from API:', data);
+
+                if (data.message) {
+                    salesReportDiv.innerText = data.message; // Show message if no data
+                } else {
+                    let output = data.map(row => `${row.product_name}: ${row.total_sold}`).join('<br>');
+                    console.log('Displaying data:', output);
+                    salesReportDiv.innerHTML = output;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+                salesReportDiv.innerText = 'Failed to load sales data.';
+            });
+    });
 });
