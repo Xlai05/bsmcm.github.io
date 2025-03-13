@@ -60,8 +60,6 @@ app.post('/login', (req, res) => {
 
 // Logout Route
 app.post('/logout', (req, res) => {
-    // Since you're not using sessions on the server side,
-    // this endpoint can simply return success
     res.json({ success: true, message: "Logged out successfully" });
 });
 
@@ -81,24 +79,19 @@ app.post('/add-employee', (req, res) => {
 // Remove Employee Route
 app.post('/remove-employee', (req, res) => {
     const { username } = req.body;
-    console.log('Received request to remove employee with username:', username); // Debugging log
 
     if (!username) {
-        console.error('Username is missing in the request body'); // Debugging log
         return res.status(400).json({ message: 'Username is required' });
     }
 
     const sql = `DELETE FROM employees WHERE LOWER(UserName) = LOWER(?)`;
     db.query(sql, [username], (err, result) => {
         if (err) {
-            console.error('Database error:', err); // Debugging log
             return res.status(400).json({ error: err.message });
         }
         if (result.affectedRows === 0) {
-            console.log('Employee not found'); // Debugging log
             return res.status(404).json({ message: 'Employee not found' });
         }
-        console.log('Employee removed successfully'); // Debugging log
         res.json({ success: true, message: 'Employee removed successfully!' });
     });
 });
@@ -126,6 +119,35 @@ app.get('/employees/:id', (req, res) => {
     });
 });
 
+// Sales Report Route
+app.get('/sales-report', (req, res) => {
+    const date = req.query.date;
+    console.log(`Received request for date: ${date} Type: daily`);
+
+    const query = `
+        SELECT 
+            p.ProductName AS product_name, 
+            SUM(o.quantity) AS total_sold 
+        FROM orders o
+        JOIN productdetails p ON o.product_id = p.Product_ID
+        WHERE o.Date = ?
+        GROUP BY o.product_id
+        ORDER BY total_sold DESC;
+    `;
+
+    db.query(query, [date], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+    
+        if (results.length === 0) {
+            return res.json({ message: 'No sales data found for the selected date.' });
+        }
+    
+        res.json(results);
+    });
+});
+
 // Change Password Route
 app.post('/change-password', (req, res) => {
     const { username, currentPassword, newPassword } = req.body;
@@ -137,7 +159,6 @@ app.post('/change-password', (req, res) => {
     const sqlSelect = "SELECT * FROM employees WHERE UserName = ?";
     db.query(sqlSelect, [username], (err, result) => {
         if (err) {
-            console.error(err);
             return res.status(500).json({ message: "Database error" });
         }
         if (result.length === 0) {
@@ -152,7 +173,6 @@ app.post('/change-password', (req, res) => {
         const sqlUpdate = "UPDATE employees SET Password = ? WHERE UserName = ?";
         db.query(sqlUpdate, [newPassword, username], (err, result) => {
             if (err) {
-                console.error(err);
                 return res.status(500).json({ message: "Database error" });
             }
             res.json({ message: "Password changed successfully" });

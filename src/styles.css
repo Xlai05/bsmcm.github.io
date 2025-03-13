@@ -13,3 +13,10 @@ body {
     z-index: 50;
 }
 
+
+/* Add styles for the chart container */
+#salesChart {
+    max-width: 75%;
+    max-height: 75%;
+}
+
