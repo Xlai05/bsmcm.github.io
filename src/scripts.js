@@ -113,6 +113,11 @@ function setupEventListeners() {
     document.querySelector('a[onclick="toggleProfileManagement()"]').addEventListener('click', function() {
         showSection('profile-management');
     });
+
+    // Add logout button click handler
+    document.querySelector('a[onclick="logout()"]').addEventListener('click', function() {
+        logout();
+    });
 }
 
 // Handle remove employee form submission
@@ -189,7 +194,7 @@ function handleChangePassword(event) {
 
 // Show a specific section and hide others
 function showSection(sectionId) {
-    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management'];
+    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management',];
     sections.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
@@ -373,7 +378,9 @@ function updateChart(salesData) {
             responsive: true
         }
     });
+}
 
+// Logout function
 function logout() {
     // Reset UI state - maintain the login screen's original flex layout
     const loginScreen = document.getElementById('login-screen');
