@@ -273,6 +273,7 @@ function viewEmployeeProfile(employeeId) {
         });
 }
 
+
 // Close employee profile
 function closeEmployeeProfile() {
     document.getElementById('employee-profile').classList.add('hidden');
