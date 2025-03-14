@@ -96,7 +96,34 @@ app.post('/remove-employee', (req, res) => {
     });
 });
 
+// Update Stock Changes
+app.post("/update-stock", (req, res) => {
+    const { productName, newStock } = req.body;
 
+    const sql = "UPDATE productdetails SET StockQuantity = ? WHERE ProductName = ?";
+    db.query(sql, [newStock, productName], (err, result) => {
+        if (err) {
+            console.error("Error updating stock:", err);
+            res.status(500).json({ success: false, error: "Failed to update stock" });
+            return;
+        }
+        res.json({ success: true, message: "Stock updated successfully" });
+    });
+});
+
+
+// Fetch Inventory Route
+app.get("/inventory", (req, res) => {
+    const sql = "SELECT ProductName, StockQuantity FROM productdetails";
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Error fetching inventory:", err);
+            res.status(500).json({ error: "Failed to retrieve inventory" });
+            return;
+        }
+        res.json(results);
+    });
+});
 
 
 // Fetch Employees Route
@@ -122,8 +149,7 @@ app.get('/employees/:id', (req, res) => {
     });
 });
 
-
-
+// Fetch Current User Route
 app.get('/current-user', (req, res) => {
     const username = req.query.username; // Get username from query parameter
 
@@ -144,9 +170,7 @@ app.get('/current-user', (req, res) => {
     });
 });
 
-
-
-//orders
+// Orders Route
 app.get('/orders', (req, res) => {
     const date = req.query.date;
     console.log(`Received request for orders on date: ${date}`);
@@ -177,7 +201,6 @@ app.get('/orders', (req, res) => {
     });
 });
 
-
 // Sales Report Route
 app.get('/sales-report', (req, res) => {
     const date = req.query.date;
@@ -200,7 +223,6 @@ app.get('/sales-report', (req, res) => {
         WHERE o.Date = ?
         GROUP BY o.product_id, p.ProductName, pc.RefillPrice, pc.ProductPrice
         ORDER BY total_sold DESC;
-
     `;
 
     const totalQuery = `
@@ -224,7 +246,6 @@ app.get('/sales-report', (req, res) => {
         // Debug log to see the results
         console.log('Query results:', JSON.stringify(results, null, 2)); 
 
-
         db.query(totalQuery, [date], (err, totalResult) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
@@ -246,8 +267,6 @@ app.get('/materials', (req, res) => {
         res.json(result);
     });
 });
-
-
 
 // Change Password Route
 app.post('/change-password', (req, res) => {

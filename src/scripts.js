@@ -41,6 +41,79 @@ document.getElementById('login-form').addEventListener('submit', function(event)
     .catch(error => console.error("Error:", error));
 });
 
+document.addEventListener("DOMContentLoaded", function() {
+    fetchInventory();
+});
+
+// the report section is hidden
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("sales-report-section").style.display = "none";
+    setupEventListeners();
+});
+
+// Run event listener setup when DOM loads
+document.addEventListener("DOMContentLoaded", () => {
+    setupEventListeners();
+});
+
+// Make sure the datepicker event listener works correctly
+document.addEventListener('DOMContentLoaded', function () {
+    const dateInput = document.getElementById('datePicker');
+    
+    // Add this event listener to make the datepicker automatically fetch data
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            fetchSalesData(); // Call fetchSalesData when date changes
+        });
+    }
+});
+
+function fetchInventory() {
+    fetch("http://localhost:3000/inventory")
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById("inventory-table-body");
+            tableBody.innerHTML = ""; // Clear previous data
+
+            data.forEach(item => {
+                const row = `<tr>
+                    <td class='p-2 border text-center'>${item.ProductName}</td>
+                    <td class='p-2 border text-center'>
+                        <input type="number" id="stock-${item.ProductName}" value="${item.StockQuantity}" 
+                            class="w-16 p-1 border rounded text-center"
+                            onkeydown="handleStockUpdate(event, '${item.ProductName}')">
+                    </td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        })
+        .catch(error => console.error("Error fetching inventory:", error));
+}
+
+// Function to handle stock update on "Enter" key press
+function handleStockUpdate(event, productName) {
+    if (event.key === "Enter") {
+        const newStock = document.getElementById(`stock-${productName}`).value;
+
+        fetch("http://localhost:3000/update-stock", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productName, newStock })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Stock updated successfully!");
+            } else {
+                console.error("Failed to update stock.");
+            }
+        })
+        .catch(error => console.error("Error updating stock:", error));
+    }
+}
+
+
+
 function loadUserProfile() {
     const currentUser = localStorage.getItem("currentUser");
     if (!currentUser) return;
@@ -220,7 +293,7 @@ function handleChangePassword(event) {
 }
 // Show a specific section and hide others
 function showSection(sectionId) {
-    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management', 'sales-report-section'];
+    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management', 'sales-report-section', 'inventory-section'];
     sections.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
@@ -244,6 +317,11 @@ function showSection(sectionId) {
 // Toggle Supplier Info Section
 function toggleSupplierInfo() {
     showSection('supplier-info');
+}
+
+// Toggle Supplier Info Section
+function toggleInventorySection() {
+    showSection('inventory-section');
 }
 
 // Toggle Profile Management Section
@@ -329,11 +407,6 @@ function toggleSettings() {
     }
 }
 
-// Ensure the report section is hidden initially
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("sales-report-section").style.display = "none";
-    setupEventListeners();
-});
 
 
 // Function to fetch sales data from the server
@@ -492,46 +565,6 @@ function logout() {
 }
 
 
-// Run event listener setup when DOM loads
-document.addEventListener("DOMContentLoaded", () => {
-    setupEventListeners();
-});
-
-// Make sure the datepicker event listener works correctly
-document.addEventListener('DOMContentLoaded', function () {
-    const dateInput = document.getElementById('datePicker');
-    
-    // Add this event listener to make the datepicker automatically fetch data
-    if (dateInput) {
-        dateInput.addEventListener('change', function() {
-            fetchSalesData(); // Call fetchSalesData when date changes
-        });
-    }
-});
-
-const materialsData = [
-    { Item_ID: 1, Item_name: "UMB-Seal", Cost: 0.28 },
-    { Item_ID: 2, Item_name: "500ml-bottles", Cost: 3.05 },
-    { Item_ID: 3, Item_name: "1000ml-bottles", Cost: 5.15 },
-    { Item_ID: 4, Item_name: "Non-Spill-Sticker", Cost: 0.27 },
-    { Item_ID: 5, Item_name: "Non-Spill-Caps-Half", Cost: 1.70 },
-    { Item_ID: 6, Item_name: "Non-Spill-Plug", Cost: 0.55 },
-    { Item_ID: 7, Item_name: "Gallon-Standard", Cost: 24.00 },
-    { Item_ID: 8, Item_name: "Gallon-Cyan", Cost: 20.60 },
-    { Item_ID: 9, Item_name: "Gallon-Blue-Green", Cost: 23.00 },
-    { Item_ID: 10, Item_name: "Gallon-Green", Cost: 23.00 },
-    { Item_ID: 11, Item_name: "Gallon-Round-Mega", Cost: 22.00 },
-    { Item_ID: 12, Item_name: "Gallon-Pet-Slim-2.5-Faucet", Cost: 138.00 },
-    { Item_ID: 13, Item_name: "Gallon-Pet-Slim-5-Faucet", Cost: 165.00 },
-    { Item_ID: 14, Item_name: "Seal-5-Gal-w/Print", Cost: 0.24 },
-    { Item_ID: 15, Item_name: "Seal-5-Gal-w/Print-Generic", Cost: 0.24 },
-    { Item_ID: 16, Item_name: "Pet-Slim-Big-Cups", Cost: 0.26 },
-    { Item_ID: 17, Item_name: "Pet-Slim-Small-Cups", Cost: 0.12 },
-    { Item_ID: 18, Item_name: "Pet-Slim-Faucet", Cost: 0.18 },
-    { Item_ID: 19, Item_name: "UMB-Straight/BagForm", Cost: 0.28 },
-    { Item_ID: 20, Item_name: "UMB-Straight/Generic", Cost: 0.27 }
-];
-
 // Function to toggle Supplier Info Section
 function toggleSupplierInfo() {
     showSection('supplier-info');
@@ -666,3 +699,27 @@ function clearCalculator() {
         }
     });
 }
+
+
+const materialsData = [
+    { Item_ID: 1, Item_name: "UMB-Seal", Cost: 0.28 },
+    { Item_ID: 2, Item_name: "500ml-bottles", Cost: 3.05 },
+    { Item_ID: 3, Item_name: "1000ml-bottles", Cost: 5.15 },
+    { Item_ID: 4, Item_name: "Non-Spill-Sticker", Cost: 0.27 },
+    { Item_ID: 5, Item_name: "Non-Spill-Caps-Half", Cost: 1.70 },
+    { Item_ID: 6, Item_name: "Non-Spill-Plug", Cost: 0.55 },
+    { Item_ID: 7, Item_name: "Gallon-Standard", Cost: 24.00 },
+    { Item_ID: 8, Item_name: "Gallon-Cyan", Cost: 20.60 },
+    { Item_ID: 9, Item_name: "Gallon-Blue-Green", Cost: 23.00 },
+    { Item_ID: 10, Item_name: "Gallon-Green", Cost: 23.00 },
+    { Item_ID: 11, Item_name: "Gallon-Round-Mega", Cost: 22.00 },
+    { Item_ID: 12, Item_name: "Gallon-Pet-Slim-2.5-Faucet", Cost: 138.00 },
+    { Item_ID: 13, Item_name: "Gallon-Pet-Slim-5-Faucet", Cost: 165.00 },
+    { Item_ID: 14, Item_name: "Seal-5-Gal-w/Print", Cost: 0.24 },
+    { Item_ID: 15, Item_name: "Seal-5-Gal-w/Print-Generic", Cost: 0.24 },
+    { Item_ID: 16, Item_name: "Pet-Slim-Big-Cups", Cost: 0.26 },
+    { Item_ID: 17, Item_name: "Pet-Slim-Small-Cups", Cost: 0.12 },
+    { Item_ID: 18, Item_name: "Pet-Slim-Faucet", Cost: 0.18 },
+    { Item_ID: 19, Item_name: "UMB-Straight/BagForm", Cost: 0.28 },
+    { Item_ID: 20, Item_name: "UMB-Straight/Generic", Cost: 0.27 }
+];

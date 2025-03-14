@@ -1,20 +1,19 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Website Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Login Screen -->
-    <div id="login-screen" class="flex flex-col justify-center items-center min-h-screen pb-24"> <!--Can Temporary HIDE -->
+    <div id="login-screen" class="flex flex-col justify-center items-center min-h-screen pb-24">
         <img src="TUBIG_LAMI_LOGO.png" alt="TUBIG LAMI Logo" class="mb-4 mx-auto" style="width: 250px; height: auto;">
-
         <div class="bg-white p-8 rounded-lg shadow-lg w-80 text-center">
-            
             <h2 class="text-2xl font-bold mb-4">Login</h2>
             <form id="login-form">
                 <input type="text" id="username" placeholder="Username" class="w-full p-2 mb-2 border rounded" required>
@@ -25,14 +24,14 @@
     </div>
 
     <!-- Main Content -->
-    <div id="main-content" class="hidden"> <!-- Can Temporary show -->
+    <div id="main-content" class="hidden">
         <div class="container mx-auto p-4">
             <div class="text-center border-b-2 border-blue-500 pb-2">
                 <h1 class="text-2xl font-bold">TUBIG LAMI</h1>
             </div>
             <div id="nav-bar" class="flex justify-center mt-4 border-b-2 border-black pb-2">
                 <a href="#" class="mx-4 text-lg font-semibold underline" onclick="toggleOrderButtons()">ORDERS</a>
-                <a href="#" class="mx-4 text-lg font-semibold underline">INVENTORY</a>
+                <a href="#" class="mx-4 text-lg font-semibold underline" onclick="toggleInventorySection()">INVENTORY</a>
                 <a href="#" class="mx-4 text-lg font-semibold underline" onclick="toggleSupplierInfo()">SUPPLIERS</a>
                 <a href="#" class="mx-4 text-lg font-semibold underline" id="employee-management-button" onclick="toggleEmployeeManagement()">EMPLOYEE MANAGEMENT</a>
                 <a href="#" class="mx-4 text-lg font-semibold underline" id="sales-report-button" onclick="toggleSalesReport()">SALES REPORT</a>
@@ -45,12 +44,14 @@
                 </div>
             </div>
             <div class="content-wrapper flex justify-between relative">
+                <!-- Order Buttons Section -->
                 <div id="order-buttons" class="hidden flex-col items-start bg-teal-100 p-8 mt-4 rounded-lg w-full">
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100" onclick="toggleForm()">CREATE</button>
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100">VIEW</button>
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100">UPDATE</button>
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100">DETAILS</button>
                 </div>
+                <!-- Form Container -->
                 <div id="form-container" class="hidden bg-teal-600 p-5 rounded-lg mt-4 w-1/2 absolute right-4 top-1/2 transform -translate-y-1/2">
                     <input type="text" placeholder="Name" class="w-full p-2 mb-2 border rounded">
                     <input type="text" placeholder="Address" class="w-full p-2 mb-2 border rounded">
@@ -61,10 +62,10 @@
                     </select>
                     <button class="w-full p-2 bg-white text-black border-2 border-black rounded">Create</button>
                 </div>
+                <!-- Supplier Info Section -->
                 <div id="supplier-info" class="hidden bg-white p-5 rounded-lg mt-4 w-full">
                     <h2 class="text-2xl font-bold mb-4">Materials Cost Calculator</h2>
                     <p class="text-gray-600 mb-4">Enter the quantity for each material to calculate the total cost</p>
-                    
                     <div class="overflow-x-auto">
                         <table class="w-full border-collapse">
                             <thead>
@@ -86,7 +87,6 @@
                             </tfoot>
                         </table>
                     </div>
-                    
                     <div class="mt-4 flex justify-end">
                         <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="clearCalculator()">Clear All</button>
                     </div>
@@ -97,6 +97,7 @@
                 </div>
             </div>
         </div>
+        <!-- Employee Management Section -->
         <div id="employee-management" class="hidden container mx-auto p-4">
             <div class="bg-white p-4 rounded-lg shadow-lg">
                 <h2 class="text-xl font-bold mb-4">Employee Management</h2>
@@ -131,61 +132,77 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="profile-management" class="hidden container mx-auto p-4">
-        <div id="profile-info" class="mb-4 p-4 bg-gray-100 rounded shadow">
-            <h3 class="text-lg font-bold">Profile Information</h3>
-            <p id="profile-name"></p>
-            <p id="profile-contact"></p>
-            <p id="profile-address"></p>
-            <p id="profile-username"></p>
-        </div>        
-        <div class="bg-white p-4 rounded-lg shadow-lg">
-            <h2 class="text-xl font-bold mt-4">Password Management</h2>
-            <form id="change-password-form">
-                <input type="password" name="currentPassword" placeholder="Current Password" class="w-full p-2 mb-2 border rounded" required>
-                <input type="password" name="newPassword" placeholder="New Password" class="w-full p-2 mb-2 border rounded" required>
-                <input type="password" name="confirmPassword" placeholder="Confirm New Password" class="w-full p-2 mb-2 border rounded" required>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Change Password</button>
-            </form>
+        <!-- Profile Management Section -->
+        <div id="profile-management" class="hidden container mx-auto p-4">
+            <div id="profile-info" class="mb-4 p-4 bg-gray-100 rounded shadow">
+                <h3 class="text-lg font-bold">Profile Information</h3>
+                <p id="profile-name"></p>
+                <p id="profile-contact"></p>
+                <p id="profile-address"></p>
+                <p id="profile-username"></p>
+            </div>        
+            <div class="bg-white p-4 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mt-4">Password Management</h2>
+                <form id="change-password-form">
+                    <input type="password" name="currentPassword" placeholder="Current Password" class="w-full p-2 mb-2 border rounded" required>
+                    <input type="password" name="newPassword" placeholder="New Password" class="w-full p-2 mb-2 border rounded" required>
+                    <input type="password" name="confirmPassword" placeholder="Confirm New Password" class="w-full p-2 mb-2 border rounded" required>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Change Password</button>
+                </form>
+            </div>
         </div>
-    </div>
+        <!-- Employee Profile Modal -->
+        <div id="employee-profile" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center">
+            <div class="bg-white p-4 rounded-lg shadow-lg w-1/2">
+                <button class="bg-red-500 text-white px-4 py-2 rounded mb-4" onclick="closeEmployeeProfile()">Close</button>
+                <div id="employee-profile-content">
+                    <!-- Employee profile content will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+        <!-- Sales Report Section -->
+        <div id="sales-report-section" class="hidden container mx-auto p-4">
+            <h2 class="text-xl font-bold mb-4">Sales Report</h2>
+            <!-- Date Picker -->
+            <label for="sales-date" class="block mb-2">Select Date:</label>
+            <input type="date" id="datePicker" class="w-full p-2 mb-4 border rounded">
+            <!-- Products Sold Display -->
+            <div class="mt-4 border p-3 rounded bg-gray-50">
+                <h3 class="text-lg font-bold mb-2">Products Sold:</h3>
+                <div id="salesReport" class="mt-2">Select a date to see sales data.</div>
+            </div>
+            <!-- Total Gained Display -->
+            <div id="totalGained" class="mt-4 text-lg font-bold"></div>
+            <!-- Chart Display -->
+            <div style="width: 400px; height: 400px; margin: auto;">
+                <canvas id="salesChart" class="w-full mb-4"></canvas>
+            </div>
+            <!-- Best Seller Display -->
+            <p id="best-seller" class="text-lg font-bold"></p>
+        </div>
 
-    <div id="employee-profile" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center">
-        <div class="bg-white p-4 rounded-lg shadow-lg w-1/2">
-            <button class="bg-red-500 text-white px-4 py-2 rounded mb-4" onclick="closeEmployeeProfile()">Close</button>
-            <div id="employee-profile-content">
-                <!-- Employee profile content will be dynamically added here -->
+                        <!-- Inventory Section -->
+        <div id="inventory-section" class="hidden container mx-auto p-4">
+            <div class="mb-4 p-4 bg-gray-100 rounded shadow">
+            <h2 class="text-xl font-bold mb-4">Inventory</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="p-2 border">Product Name</th>
+                            <th class="p-2 border">Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body">
+                        <!-- Inventory items will be dynamically added here -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <div id="sales-report-section" class="hidden container mx-auto p-4">
-        <h2 class="text-xl font-bold mb-4">Sales Report</h2>
-    
-        <!-- Date Picker (keep this) -->
-        <label for="sales-date" class="block mb-2">Select Date:</label>
-        <input type="date" id="datePicker" class="w-full p-2 mb-4 border rounded">
-    
-        <!-- Products Sold Display -->
-        <div class="mt-4 border p-3 rounded bg-gray-50">
-            <h3 class="text-lg font-bold mb-2">Products Sold:</h3>
-            <div id="salesReport" class="mt-2">Select a date to see sales data.</div>
-        </div>
-    
-        <!-- Total Gained Display -->
-        <div id="totalGained" class="mt-4 text-lg font-bold"></div>
-    
-        <!-- Chart Display -->
-        <div style="width: 400px; height: 400px; margin: auto;">
-            <canvas id="salesChart" class="w-full mb-4"></canvas>
-        </div>
-    
-        <!-- Best Seller Display -->
-        <p id="best-seller" class="text-lg font-bold"></p>
+        
     </div>
-
     <script src="scripts.js"></script>
 </body>
 </html>
