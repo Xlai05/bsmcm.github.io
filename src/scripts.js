@@ -509,31 +509,3 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-
-document.addEventListener("DOMContentLoaded", function () {
-    const username = localStorage.getItem("currentUser"); // Retrieve stored username
-    const profileSection = document.getElementById("profile-section"); // Profile container
-
-    if (username) {
-        fetch(`http://localhost:3000/current-user?username=${username}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    profileSection.innerHTML = `<p>${data.message}</p>`;
-                } else {
-                    profileSection.innerHTML = `
-                        <h3 class="text-lg font-bold">${data.EmployeeName}</h3>
-                        <p>Contact: ${data.Contact}</p>
-                        <p>Address: ${data.Address}</p>
-                        <p>Username: ${data.UserName}</p>
-                    `;
-                }
-            })
-            .catch(error => console.error("Error fetching user details:", error));
-    } else {
-        profileSection.innerHTML = "<p>No user logged in.</p>";
-    }
-});
-
-
-
