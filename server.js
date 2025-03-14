@@ -119,6 +119,62 @@ app.get('/employees/:id', (req, res) => {
     });
 });
 
+
+
+app.get('/current-user', (req, res) => {
+    const username = req.query.username; // Get username from query parameter
+
+    if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+    }
+
+    const sql = `SELECT EmployeeName, Contact, Address, UserName FROM employees WHERE UserName = ?`;
+    db.query(sql, [username], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (result.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+        res.json(result[0]); // Send user details without the password
+    });
+});
+
+
+
+//orders
+app.get('/orders', (req, res) => {
+    const date = req.query.date;
+    console.log(`Received request for orders on date: ${date}`);
+
+    const query = `
+        SELECT 
+            o.Order_ID as order_id,
+            p.ProductName as product_name, 
+            o.Quantity as quantity,
+            p.Price as price,  // Changed from o.Price to p.Price assuming price is in productdetails table
+            o.Total as total
+        FROM orders o
+        JOIN productdetails p ON o.product_id = p.Product_ID
+        WHERE o.Date = ?
+        ORDER BY o.Order_ID;
+    `;
+
+    db.query(query, [date], (err, results) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+    
+        if (results.length === 0) {
+            return res.json({ message: 'No orders found for the selected date.' });
+        }
+
+        res.json(results);
+    });
+});
+
+
 // Sales Report Route
 app.get('/sales-report', (req, res) => {
     const date = req.query.date;
@@ -127,18 +183,30 @@ app.get('/sales-report', (req, res) => {
     const query = `
         SELECT 
             p.ProductName AS product_name, 
-            SUM(o.quantity) AS total_sold 
+            SUM(o.quantity) AS total_sold,
+            COALESCE(pc.RefillPrice, 0) AS refill_price, 
+            COALESCE(pc.ProductPrice, 0) AS product_price,
+            CASE 
+                WHEN pc.RefillPrice > 0 THEN 'Refill'
+                WHEN pc.ProductPrice > 0 THEN 'Bought'
+                ELSE 'Unknown'
+            END AS classification
         FROM orders o
         JOIN productdetails p ON o.product_id = p.Product_ID
+        JOIN productcategories pc ON p.Category_ID = pc.Category_ID
         WHERE o.Date = ?
-        GROUP BY o.product_id
+        GROUP BY o.product_id, p.ProductName, pc.RefillPrice, pc.ProductPrice
         ORDER BY total_sold DESC;
+
     `;
 
     const totalQuery = `
-        SELECT SUM(total) AS total_gained
-        FROM orders
-        WHERE Date = ?;
+        SELECT 
+            SUM(o.quantity * COALESCE(pc.RefillPrice, pc.ProductPrice)) AS total_gained
+        FROM orders o
+        JOIN productdetails p ON o.product_id = p.Product_ID
+        JOIN productcategories pc ON p.Category_ID = pc.Category_ID
+        WHERE o.Date = ?;
     `;
 
     db.query(query, [date], (err, results) => {
@@ -149,6 +217,10 @@ app.get('/sales-report', (req, res) => {
         if (results.length === 0) {
             return res.json({ message: 'No sales data found for the selected date.' });
         }
+
+        // Debug log to see the results
+        console.log('Query results:', JSON.stringify(results, null, 2)); 
+
 
         db.query(totalQuery, [date], (err, totalResult) => {
             if (err) {

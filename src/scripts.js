@@ -18,8 +18,10 @@ document.getElementById('login-form').addEventListener('submit', function(event)
     .then(data => {
         if (data.success) {
             alert("Login successful!");
+            localStorage.setItem('currentUser', username); // Store the username
             document.getElementById('login-screen').style.display = "none";
             document.getElementById('main-content').style.display = "block";
+            loadUserProfile();
 
             // Show/hide elements based on role
             if (data.role === "admin") {
@@ -38,6 +40,25 @@ document.getElementById('login-form').addEventListener('submit', function(event)
     })
     .catch(error => console.error("Error:", error));
 });
+
+function loadUserProfile() {
+    const currentUser = localStorage.getItem("currentUser");
+    if (!currentUser) return;
+
+    fetch(`http://localhost:3000/employees`)
+        .then(response => response.json())
+        .then(data => {
+            const user = data.find(emp => emp.UserName === currentUser);
+            if (user) {
+                document.getElementById("profile-name").textContent = `Name: ${user.EmployeeName}`;
+                document.getElementById("profile-contact").textContent = `Contact: ${user.Contact}`;
+                document.getElementById("profile-address").textContent = `Address: ${user.Address}`;
+                document.getElementById("profile-username").textContent = `Username: ${user.UserName}`;
+            }
+        })
+        .catch(error => console.error("Error fetching user data:", error));
+}
+
 
 // Helper function to remove existing event listeners
 function removeEventListeners(selector, event, handler) {
@@ -103,7 +124,7 @@ function setupEventListeners() {
     });
 
     document.querySelector('a[onclick="toggleSupplierInfo()"]').addEventListener('click', function() {
-        showSection('supplier-info');
+        toggleSupplierInfo();
     });
 
     document.querySelector('a[onclick="toggleEmployeeManagement()"]').addEventListener('click', function() {
@@ -111,13 +132,21 @@ function setupEventListeners() {
     });
 
     document.querySelector('a[onclick="toggleProfileManagement()"]').addEventListener('click', function() {
-        showSection('profile-management');
+        toggleProfileManagement();
     });
 
     // Add logout button click handler
     document.querySelector('a[onclick="logout()"]').addEventListener('click', function() {
         logout();
     });
+
+    // Add onclick event for the "View Report" button
+    const viewReportButton = document.getElementById("view-report-button");
+    if (viewReportButton) {
+        viewReportButton.addEventListener("click", function() {
+            toggleSalesReport();
+        });
+    }
 }
 
 // Handle remove employee form submission
@@ -156,6 +185,14 @@ function handleChangePassword(event) {
     const currentPassword = formData.get('currentPassword');
     const newPassword = formData.get('newPassword');
     const confirmPassword = formData.get('confirmPassword');
+    
+    // We need to get the username from somewhere - let's store it when the user logs in
+    const username = localStorage.getItem('currentUser'); // We'll need to store this during login
+    
+    if (!username) {
+        alert('User session not found. Please login again.');
+        return;
+    }
 
     if (newPassword !== confirmPassword) {
         alert('New passwords do not match!');
@@ -167,31 +204,20 @@ function handleChangePassword(event) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ currentPassword, newPassword })
+        body: JSON.stringify({ username, currentPassword, newPassword })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            alert('Password changed successfully!');
+        alert(data.message);
+        if (data.message === "Password changed successfully") {
             event.target.reset();
-        } else {
-            alert(data.message);
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        alert('Failed to change password. Please try again.');
     });
-
-    // Add onclick event for the "View Report" button
-    const viewReportButton = document.getElementById("view-report-button");
-    if (viewReportButton) {
-        viewReportButton.addEventListener("click", function() {
-            toggleSalesReport();
-            fetchSalesData();
-        });
-    }
 }
-
 // Show a specific section and hide others
 function showSection(sectionId) {
     const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management', 'sales-report-section'];
@@ -213,6 +239,23 @@ function showSection(sectionId) {
             }
         }
     });
+}
+
+// Toggle Supplier Info Section
+function toggleSupplierInfo() {
+    showSection('supplier-info');
+}
+
+// Toggle Profile Management Section
+function toggleProfileManagement() {
+    showSection('profile-management');
+    loadUserProfile();
+}
+
+
+// Toggle Sales Report Section
+function toggleSalesReport() {
+    showSection('sales-report-section');
 }
 
 // Toggle Add Employee Form
@@ -273,7 +316,6 @@ function viewEmployeeProfile(employeeId) {
         });
 }
 
-
 // Close employee profile
 function closeEmployeeProfile() {
     document.getElementById('employee-profile').classList.add('hidden');
@@ -287,16 +329,12 @@ function toggleSettings() {
     }
 }
 
-
 // Ensure the report section is hidden initially
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("sales-report-section").style.display = "none";
+    setupEventListeners();
 });
 
-// Function to toggle the sales report section
-function toggleSalesReport() {
-    showSection('sales-report-section');
-}
 
 // Function to fetch sales data from the server
 function fetchSalesData() {
@@ -316,33 +354,54 @@ function fetchSalesData() {
             if (data.message) {
                 document.getElementById('salesReport').innerText = data.message; 
             } else {
-                let output = data.salesData.map(row => `${row.product_name}: ${row.total_sold}`).join('<br>');
+                let output = data.salesData.map(row => {
+                    let priceDisplay = row.classification === 'Refill' 
+                        ? `₱${row.refill_price.toFixed(2)}` 
+                        : row.classification === 'Bought' 
+                        ? `₱${row.product_price.toFixed(2)}` 
+                        : 'Price not available';
+                
+                    return `${row.product_name}: ${row.total_sold} units - ${row.classification} - Price: ${priceDisplay} each`;
+                }).join('<br>');
+                
+                document.getElementById('salesReport').innerHTML = output;
+                
+                
+                
                 document.getElementById('salesReport').innerHTML = output;
 
-                // Display total gained
-                document.getElementById('totalGained').innerText = `Total Gained: ${data.totalGained}`;
+                // Display total gained with peso sign
+                document.getElementById('totalGained').innerText = `Total Gained: ₱${parseFloat(data.totalGained).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
                 // Update the chart with the sales data
                 updateChart(data.salesData);
+                
+                // Find the best seller with proper price handling
+                if (data.salesData.length > 0) {
+                    const bestSeller = data.salesData[0]; // First item is already the best seller
+                    
+                    // Format the price for the best seller
+                    let bestSellerPrice = 'Price not available';
+                    if (bestSeller.classification === 'Refill' && bestSeller.refill_price !== null) {
+                        const priceNum = Number(bestSeller.refill_price);
+                        if (!isNaN(priceNum)) {
+                            bestSellerPrice = `₱${priceNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
+                    } else if (bestSeller.classification === 'Bought' && bestSeller.product_price !== null) {
+                        const priceNum = Number(bestSeller.product_price);
+                        if (!isNaN(priceNum)) {
+                            bestSellerPrice = `₱${priceNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
+                    }
+                    
+                    document.getElementById('best-seller').innerText = `Best Seller: ${bestSeller.product_name} (${bestSeller.total_sold} units - ${bestSellerPrice} each)`;
+                }
             }
         })
-        .catch(error => console.error('Error fetching data:', error));
-
-    // Fetch orders sold on the selected date
-    fetch(`http://localhost:3000/orders?date=${selectedDate}&type=daily`)
-        .then(response => response.json())
-        .then(data => {
-            console.log('Received orders data from API:', data); // Debug log
-
-            const ordersList = document.getElementById('ordersList');
-            if (data.message) {
-                ordersList.innerText = data.message; 
-            } else {
-                let output = data.map(order => `Order ID: ${order.order_id}, Product: ${order.product_name}, Quantity: ${order.quantity}`).join('<br>');
-                ordersList.innerHTML = output;
-            }
-        })
-        .catch(error => console.error('Error fetching orders data:', error));
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            document.getElementById('salesReport').innerText = 'Failed to load sales data.';
+        });
 }
 
 // Function to update the sales chart
@@ -393,17 +452,21 @@ function updateChart(salesData) {
 
 // Logout function
 function logout() {
+    // Clear stored user data
+    localStorage.removeItem("currentUser");
+
     // Reset UI state - maintain the login screen's original flex layout
     const loginScreen = document.getElementById('login-screen');
     loginScreen.style.display = "flex"; // Set to flex instead of just "block"
     loginScreen.classList.add("flex-col", "justify-center", "items-center", "min-h-screen", "pb-24");
-    
+
+    // Hide main content
     document.getElementById('main-content').style.display = "none";
-    
+
     // Clear sensitive form fields
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
-    
+
     // Notify the server about logout (optional)
     fetch("http://localhost:3000/logout", {
         method: "POST",
@@ -411,55 +474,66 @@ function logout() {
     })
     .then(response => response.json())
     .catch(error => console.error("Error during logout:", error));
-    
+
     // Hide any open sections or forms
-    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management'];
+    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management', 'sales-report-section'];
     sections.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             element.classList.add('hidden');
         }
     });
-    
+
     // Hide settings dropdown if open
     document.getElementById('settings-dropdown').classList.add('hidden');
 
+    // Redirect to login page (optional)
+    window.location.href = "index.html";
 }
+
 
 // Run event listener setup when DOM loads
 document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
 });
 
+// Make sure the datepicker event listener works correctly
 document.addEventListener('DOMContentLoaded', function () {
-    const dateInput = document.getElementById('datePicker'); // Assuming user selects a date
-    const salesReportDiv = document.getElementById('salesReport');
-
-    if (!dateInput || !salesReportDiv) {
-        console.error('Missing elements in HTML.');
-        return;
+    const dateInput = document.getElementById('datePicker');
+    
+    // Add this event listener to make the datepicker automatically fetch data
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            fetchSalesData(); // Call fetchSalesData when date changes
+        });
     }
+});
 
-    dateInput.addEventListener('change', function () {
-        const selectedDate = dateInput.value; // Get selected date from input
-        if (!selectedDate) return;
 
-        fetch(`http://localhost:3000/sales-report?date=${selectedDate}&type=daily`)
+document.addEventListener("DOMContentLoaded", function () {
+    const username = localStorage.getItem("currentUser"); // Retrieve stored username
+    const profileSection = document.getElementById("profile-section"); // Profile container
+
+    if (username) {
+        fetch(`http://localhost:3000/current-user?username=${username}`)
             .then(response => response.json())
             .then(data => {
-                console.log('Received data from API:', data);
-
                 if (data.message) {
-                    salesReportDiv.innerText = data.message; // Show message if no data
+                    profileSection.innerHTML = `<p>${data.message}</p>`;
                 } else {
-                    let output = data.map(row => `${row.product_name}: ${row.total_sold}`).join('<br>');
-                    console.log('Displaying data:', output);
-                    salesReportDiv.innerHTML = output;
+                    profileSection.innerHTML = `
+                        <h3 class="text-lg font-bold">${data.EmployeeName}</h3>
+                        <p>Contact: ${data.Contact}</p>
+                        <p>Address: ${data.Address}</p>
+                        <p>Username: ${data.UserName}</p>
+                    `;
                 }
             })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-                salesReportDiv.innerText = 'Failed to load sales data.';
-            });
-    });
+            .catch(error => console.error("Error fetching user details:", error));
+    } else {
+        profileSection.innerHTML = "<p>No user logged in.</p>";
+    }
 });
+
+
+
