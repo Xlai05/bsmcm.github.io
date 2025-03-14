@@ -509,3 +509,165 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
+const materialsData = [
+    { Item_ID: 1, Item_name: "UMB-Seal", Cost: 0.28 },
+    { Item_ID: 2, Item_name: "500ml-bottles", Cost: 3.05 },
+    { Item_ID: 3, Item_name: "1000ml-bottles", Cost: 5.15 },
+    { Item_ID: 4, Item_name: "Non-Spill-Sticker", Cost: 0.27 },
+    { Item_ID: 5, Item_name: "Non-Spill-Caps-Half", Cost: 1.70 },
+    { Item_ID: 6, Item_name: "Non-Spill-Plug", Cost: 0.55 },
+    { Item_ID: 7, Item_name: "Gallon-Standard", Cost: 24.00 },
+    { Item_ID: 8, Item_name: "Gallon-Cyan", Cost: 20.60 },
+    { Item_ID: 9, Item_name: "Gallon-Blue-Green", Cost: 23.00 },
+    { Item_ID: 10, Item_name: "Gallon-Green", Cost: 23.00 },
+    { Item_ID: 11, Item_name: "Gallon-Round-Mega", Cost: 22.00 },
+    { Item_ID: 12, Item_name: "Gallon-Pet-Slim-2.5-Faucet", Cost: 138.00 },
+    { Item_ID: 13, Item_name: "Gallon-Pet-Slim-5-Faucet", Cost: 165.00 },
+    { Item_ID: 14, Item_name: "Seal-5-Gal-w/Print", Cost: 0.24 },
+    { Item_ID: 15, Item_name: "Seal-5-Gal-w/Print-Generic", Cost: 0.24 },
+    { Item_ID: 16, Item_name: "Pet-Slim-Big-Cups", Cost: 0.26 },
+    { Item_ID: 17, Item_name: "Pet-Slim-Small-Cups", Cost: 0.12 },
+    { Item_ID: 18, Item_name: "Pet-Slim-Faucet", Cost: 0.18 },
+    { Item_ID: 19, Item_name: "UMB-Straight/BagForm", Cost: 0.28 },
+    { Item_ID: 20, Item_name: "UMB-Straight/Generic", Cost: 0.27 }
+];
+
+// Function to toggle Supplier Info Section
+function toggleSupplierInfo() {
+    showSection('supplier-info');
+    populateMaterialsTable();
+}
+
+// Function to populate the materials table
+function populateMaterialsTable() {
+    const tableBody = document.getElementById('materials-table-body');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = ''; // Clear existing content
+    
+    // Add rows for each material
+    materialsData.forEach(material => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-100';
+        
+        const formattedCost = parseFloat(material.Cost).toFixed(2);
+        
+        row.innerHTML = `
+            <td class="p-2 border">${material.Item_name}</td>
+            <td class="p-2 border text-center">₱${formattedCost}</td>
+            <td class="p-2 border text-center">
+                <div class="flex items-center justify-center">
+                    <button class="px-2 bg-red-500 text-white rounded" onclick="decrementQuantity(${material.Item_ID})">-</button>
+                    <input 
+                        type="number" 
+                        id="qty-${material.Item_ID}" 
+                        class="w-16 p-1 mx-1 border rounded text-center" 
+                        value="0" 
+                        min="0" 
+                        onchange="updateSubtotal(${material.Item_ID}, ${material.Cost})"
+                    >
+                    <button class="px-2 bg-green-500 text-white rounded" onclick="incrementQuantity(${material.Item_ID})">+</button>
+                </div>
+            </td>
+            <td class="p-2 border text-right" id="subtotal-${material.Item_ID}">₱0.00</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
+// Function to update subtotal and total
+function updateSubtotal(itemId, cost) {
+    const quantityInput = document.getElementById(`qty-${itemId}`);
+    if (!quantityInput) return;
+    
+    const quantity = parseInt(quantityInput.value) || 0;
+    
+    // Ensure quantity is not negative
+    if (quantity < 0) {
+        quantityInput.value = 0;
+        return updateSubtotal(itemId, cost);
+    }
+    
+    const subtotal = quantity * cost;
+    const subtotalElement = document.getElementById(`subtotal-${itemId}`);
+    if (subtotalElement) {
+        subtotalElement.textContent = `₱${subtotal.toFixed(2)}`;
+    }
+    
+    // Update total
+    updateTotal();
+}
+
+// Function to update the total cost
+function updateTotal() {
+    const subtotalElements = document.querySelectorAll('[id^="subtotal-"]');
+    let total = 0;
+    
+    subtotalElements.forEach(element => {
+        // Extract the numeric value from the subtotal text (remove the ₱ symbol)
+        const subtotalText = element.textContent.replace('₱', '');
+        const subtotal = parseFloat(subtotalText) || 0;
+        total += subtotal;
+    });
+    
+    const totalElement = document.getElementById('materials-total');
+    if (totalElement) {
+        totalElement.textContent = `₱${total.toFixed(2)}`;
+    }
+}
+
+// Function to increment quantity
+function incrementQuantity(itemId) {
+    const quantityInput = document.getElementById(`qty-${itemId}`);
+    if (!quantityInput) return;
+    
+    quantityInput.value = (parseInt(quantityInput.value) || 0) + 1;
+    
+    // Find the cost for this item
+    const material = materialsData.find(m => m.Item_ID === itemId);
+    if (material) {
+        updateSubtotal(itemId, material.Cost);
+    }
+}
+
+// Function to decrement quantity
+function decrementQuantity(itemId) {
+    const quantityInput = document.getElementById(`qty-${itemId}`);
+    if (!quantityInput) return;
+    
+    const currentValue = parseInt(quantityInput.value) || 0;
+    
+    if (currentValue > 0) {
+        quantityInput.value = currentValue - 1;
+        
+        // Find the cost for this item
+        const material = materialsData.find(m => m.Item_ID === itemId);
+        if (material) {
+            updateSubtotal(itemId, material.Cost);
+        }
+    }
+}
+
+// Function to clear all quantities
+function clearCalculator() {
+    const quantityInputs = document.querySelectorAll('[id^="qty-"]');
+    
+    quantityInputs.forEach(input => {
+        input.value = 0;
+        
+        // Get the item ID from the input ID
+        const itemId = parseInt(input.id.replace('qty-', ''));
+        
+        // Find the cost for this item
+        const material = materialsData.find(m => m.Item_ID === itemId);
+        if (material) {
+            updateSubtotal(itemId, material.Cost);
+        }
+    });
+}
+
+// Add an event listener to initialize the calculator when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // We'll do nothing here for now since the table will be populated when the section is shown
+});

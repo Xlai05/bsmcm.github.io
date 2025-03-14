@@ -96,6 +96,9 @@ app.post('/remove-employee', (req, res) => {
     });
 });
 
+
+
+
 // Fetch Employees Route
 app.get('/employees', (req, res) => {
     const sql = `SELECT * FROM employees`;
@@ -232,6 +235,19 @@ app.get('/sales-report', (req, res) => {
         });
     });
 });
+
+// Fetch Materials Route
+app.get('/materials', (req, res) => {
+    const sql = `SELECT Item_ID, Item_name, Cost FROM materials ORDER BY Item_ID`;
+    db.query(sql, (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(result);
+    });
+});
+
+
 
 // Change Password Route
 app.post('/change-password', (req, res) => {

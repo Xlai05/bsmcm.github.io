@@ -61,7 +61,35 @@
                     </select>
                     <button class="w-full p-2 bg-white text-black border-2 border-black rounded">Create</button>
                 </div>
-                <div id="supplier-info" class="hidden bg-teal-100 p-5 rounded-lg mt-4 w-full">
+                <div id="supplier-info" class="hidden bg-white p-5 rounded-lg mt-4 w-full">
+                    <h2 class="text-2xl font-bold mb-4">Materials Cost Calculator</h2>
+                    <p class="text-gray-600 mb-4">Enter the quantity for each material to calculate the total cost</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-blue-100">
+                                    <th class="p-2 border text-left">Item Name</th>
+                                    <th class="p-2 border text-center">Cost (₱)</th>
+                                    <th class="p-2 border text-center">Quantity</th>
+                                    <th class="p-2 border text-right">Subtotal (₱)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="materials-table-body">
+                                <!-- Materials will be added here dynamically -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-blue-200 font-bold">
+                                    <td colspan="3" class="p-2 border text-right">Total:</td>
+                                    <td class="p-2 border text-right" id="materials-total">₱0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-end">
+                        <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="clearCalculator()">Clear All</button>
+                    </div>
                     <img src="supplyimage.jpg" alt="Screenshot of Mindanao Premier website" class="rounded-lg" width="1000" height="400">
                     <h2 class="text-xl font-bold mt-4">Mindanao Premier</h2>
                     <p class="text-lg mt-2">Contact: (123) 456-7890</p>
