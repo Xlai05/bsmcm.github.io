@@ -135,6 +135,12 @@ app.get('/sales-report', (req, res) => {
         ORDER BY total_sold DESC;
     `;
 
+    const totalQuery = `
+        SELECT SUM(total) AS total_gained
+        FROM orders
+        WHERE Date = ?;
+    `;
+
     db.query(query, [date], (err, results) => {
         if (err) {
             return res.status(500).json({ error: err.message });
@@ -143,8 +149,15 @@ app.get('/sales-report', (req, res) => {
         if (results.length === 0) {
             return res.json({ message: 'No sales data found for the selected date.' });
         }
-    
-        res.json(results);
+
+        db.query(totalQuery, [date], (err, totalResult) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+
+            const totalGained = totalResult[0].total_gained || 0;
+            res.json({ salesData: results, totalGained });
+        });
     });
 });
 
