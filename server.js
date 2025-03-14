@@ -309,6 +309,53 @@ app.post('/change-password', (req, res) => {
     });
 });
 
+// Fetch Products Route
+app.get("/products", (req, res) => {
+    const sql = "SELECT Product_ID, ProductName, StockQuantity FROM productdetails";
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("Error fetching products:", err);
+            res.status(500).json({ error: "Failed to retrieve products" });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Place Order Route
+app.post("/place-order", (req, res) => {
+    const { customerName, customerContact, customerAddress, product_id, quantity, productType, orderStatus, employee_id } = req.body;
+
+    if (!customerName || !customerContact || !customerAddress || !product_id || !quantity || !productType || !orderStatus || !employee_id) {
+        return res.status(400).json({ error: "All fields are required." });
+    }
+
+    // First, insert customer if not exists
+    const customerQuery = "INSERT INTO customers (Name, Contact, Address) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Name=VALUES(Name), Contact=VALUES(Contact), Address=VALUES(Address)";
+    db.query(customerQuery, [customerName, customerContact, customerAddress], (err, result) => {
+        if (err) {
+            console.error("Error inserting customer:", err);
+            return res.status(500).json({ error: "Failed to insert customer." });
+        }
+
+        const customer_id = result.insertId || result.affectedRows; // Get customer ID
+
+        // Insert order
+        const orderQuery = "INSERT INTO orders (Customer_ID, Total, Date, Employee_ID, product_id, quantity, ProductType) VALUES (?, ?, CURDATE(), ?, ?, ?, ?)";
+        const total = 0; // Placeholder for total, should be calculated based on price
+
+        db.query(orderQuery, [customer_id, total, employee_id, product_id, quantity, productType], (err, orderResult) => {
+            if (err) {
+                console.error("Error placing order:", err);
+                return res.status(500).json({ error: "Failed to place order." });
+            }
+
+            res.json({ message: "Order placed successfully!" });
+        });
+    });
+});
+
+
 // Start Server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

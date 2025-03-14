@@ -45,23 +45,49 @@
             </div>
             <div class="content-wrapper flex justify-between relative">
                 <!-- Order Buttons Section -->
-                <div id="order-buttons" class="hidden flex-col items-start bg-teal-100 p-8 mt-4 rounded-lg w-full">
-                    <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100" onclick="toggleForm()">CREATE</button>
+                <div id="order-buttons" class="hidden flex-col items-start bg-white-100 p-8 mt-4 rounded-lg w-full">
+                    <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100" onclick="toggleOrderForm()">CREATE</button>
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100">VIEW</button>
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100">UPDATE</button>
                     <button class="w-40 p-3 mb-3 border-2 border-black bg-teal-100">DETAILS</button>
                 </div>
-                <!-- Form Container -->
-                <div id="form-container" class="hidden bg-teal-600 p-5 rounded-lg mt-4 w-1/2 absolute right-4 top-1/2 transform -translate-y-1/2">
-                    <input type="text" placeholder="Name" class="w-full p-2 mb-2 border rounded">
-                    <input type="text" placeholder="Address" class="w-full p-2 mb-2 border rounded">
-                    <input type="text" placeholder="Contact" class="w-full p-2 mb-2 border rounded">
-                    <select class="w-full p-2 mb-2 border rounded">
-                        <option value="paid">Paid</option>
-                        <option value="unpaid">Unpaid</option>
-                    </select>
-                    <button class="w-full p-2 bg-white text-black border-2 border-black rounded">Create</button>
+                
+                <div id="order-form" class="p-4 bg-gray-100 rounded-lg shadow-md hidden">
+                    <h2 class="text-xl font-bold mb-4">Place an Order</h2>
+                
+                    <form id="order-form-data">
+                        <!-- Customer Info -->
+                        <input type="text" id="customerName" placeholder="Customer Name" required class="w-full p-2 mb-2 border rounded">
+                        <input type="text" id="customerContact" placeholder="Customer Contact" required class="w-full p-2 mb-2 border rounded">
+                        <input type="text" id="customerAddress" placeholder="Customer Address" required class="w-full p-2 mb-2 border rounded">
+                
+                        <!-- Product Selection -->
+                        <select id="productSelect" class="w-full p-2 mb-2 border rounded" required>
+                            <option value="">Select a Product</option>
+                        </select>
+                
+                        <!-- Quantity -->
+                        <input type="number" id="quantity" placeholder="Quantity" min="1" required class="w-full p-2 mb-2 border rounded">
+                
+                        <!-- Product Type -->
+                        <select id="productType" class="w-full p-2 mb-2 border rounded">
+                            <option value="1">Refill</option>
+                            <option value="2">Bought</option>
+                        </select>
+                
+                        <!-- Order Status -->
+                        <select id="orderStatus" class="w-full p-2 mb-2 border rounded" required>
+                            <option value="">Select Status</option>
+                            <option value="1">Paid</option>
+                            <option value="2">To Pay</option>
+                            <option value="3">Cancelled</option>
+                        </select>
+                
+                        <!-- Submit Button -->
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Submit Order</button>
+                    </form>
                 </div>
+                
                 <!-- Supplier Info Section -->
                 <div id="supplier-info" class="hidden bg-white p-5 rounded-lg mt-4 w-full">
                     <h2 class="text-2xl font-bold mb-4">Materials Cost Calculator</h2>

@@ -293,31 +293,48 @@ function handleChangePassword(event) {
 }
 // Show a specific section and hide others
 function showSection(sectionId) {
-    const sections = ['order-buttons', 'supplier-info', 'employee-management', 'profile-management', 'sales-report-section', 'inventory-section'];
+    const sections = ['supplier-info', 'employee-management', 'profile-management', 'sales-report-section', 'inventory-section'];
+
     sections.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
             if (id === sectionId) {
                 element.classList.remove('hidden');
-                // For sales-report-section which uses style.display
                 if (id === 'sales-report-section') {
                     element.style.display = "block";
                 }
             } else {
                 element.classList.add('hidden');
-                // For sales-report-section which uses style.display
                 if (id === 'sales-report-section') {
                     element.style.display = "none";
                 }
             }
         }
     });
+
+    // Special case: When clicking "Orders," keep "order-buttons" visible
+    if (sectionId === 'order-buttons') {
+        document.getElementById('order-buttons').classList.remove('hidden');
+    } else {
+        document.getElementById('order-buttons').classList.add('hidden');
+        document.getElementById('order-form').classList.add('hidden'); // Also hide order form
+    }
 }
 
-// Toggle Supplier Info Section
-function toggleSupplierInfo() {
-    showSection('supplier-info');
+
+
+// Toggle Order Form
+function toggleOrderForm() {
+    const orderForm = document.getElementById('order-form');
+    
+    if (orderForm.classList.contains('hidden')) {
+        orderForm.classList.remove('hidden'); // Show form
+    } else {
+        orderForm.classList.add('hidden'); // Hide form if clicked again
+    }
 }
+
+
 
 // Toggle Supplier Info Section
 function toggleInventorySection() {
@@ -712,3 +729,54 @@ const materialsData = [
     { Item_ID: 19, Item_name: "UMB-Straight/BagForm", Cost: 0.28 },
     { Item_ID: 20, Item_name: "UMB-Straight/Generic", Cost: 0.27 }
 ];
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    fetchProducts(); // Load products into dropdown
+
+    document.getElementById("order-form-data").addEventListener("submit", function (event) {
+        event.preventDefault();
+        submitOrder();
+    });
+});
+
+function fetchProducts() {
+    fetch("http://localhost:3000/products") // Fetch products from backend
+        .then(response => response.json())
+        .then(data => {
+            const productSelect = document.getElementById("productSelect");
+            productSelect.innerHTML = `<option value="">Select a Product</option>`; 
+            data.forEach(product => {
+                productSelect.innerHTML += `<option value="${product.Product_ID}">${product.ProductName} (Stock: ${product.StockQuantity})</option>`;
+            });
+        })
+        .catch(error => console.error("Error fetching products:", error));
+}
+
+function submitOrder() {
+    const orderData = {
+        customerName: document.getElementById("customerName").value,
+        customerContact: document.getElementById("customerContact").value,
+        customerAddress: document.getElementById("customerAddress").value,
+        product_id: document.getElementById("productSelect").value,
+        quantity: document.getElementById("quantity").value,
+        productType: document.getElementById("productType").value,
+        orderStatus: document.getElementById("orderStatus").value,
+        employee_id: localStorage.getItem("currentUserID") // Auto-fetch employee ID from local storage
+    };
+
+    fetch("http://localhost:3000/place-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        document.getElementById("order-form").reset();
+        fetchProducts(); // Refresh product list to update stock
+    })
+    .catch(error => console.error("Error placing order:", error));
+}
+
