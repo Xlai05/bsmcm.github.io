@@ -666,8 +666,3 @@ function clearCalculator() {
         }
     });
 }
-
-// Add an event listener to initialize the calculator when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // We'll do nothing here for now since the table will be populated when the section is shown
-});
