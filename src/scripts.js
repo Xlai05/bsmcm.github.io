@@ -409,10 +409,9 @@ function toggleSettings() {
 
 
 
-// Function to fetch sales data from the server
 function fetchSalesData() {
     const dateInput = document.getElementById('datePicker');
-    const selectedDate = dateInput.value; // Get selected date from input
+    const selectedDate = dateInput.value; 
 
     if (!selectedDate) {
         alert("Please select a date.");
@@ -426,49 +425,37 @@ function fetchSalesData() {
 
             if (data.message) {
                 document.getElementById('salesReport').innerText = data.message; 
-            } else {
-                let output = data.salesData.map(row => {
-                    let priceDisplay = row.classification === 'Refill' 
-                        ? `₱${row.refill_price.toFixed(2)}` 
-                        : row.classification === 'Bought' 
-                        ? `₱${row.product_price.toFixed(2)}` 
-                        : 'Price not available';
-                
-                    return `${row.product_name}: ${row.total_sold} units - ${row.classification} - Price: ${priceDisplay} each`;
-                }).join('<br>');
-                
-                document.getElementById('salesReport').innerHTML = output;
-                
-                
-                
-                document.getElementById('salesReport').innerHTML = output;
+                document.getElementById('totalGained').innerText = '';
+                document.getElementById('best-seller').innerText = '';
+                return;
+            }
 
-                // Display total gained with peso sign
-                document.getElementById('totalGained').innerText = `Total Gained: ₱${parseFloat(data.totalGained).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            // 🔹 Fix NaN issue by ensuring 'price' exists
+            let output = data.salesData.map(row => {
+                let priceDisplay = row.price !== null && !isNaN(row.price) 
+                    ? `₱${parseFloat(row.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                    : 'Price not available';
 
-                // Update the chart with the sales data
-                updateChart(data.salesData);
-                
-                // Find the best seller with proper price handling
-                if (data.salesData.length > 0) {
-                    const bestSeller = data.salesData[0]; // First item is already the best seller
-                    
-                    // Format the price for the best seller
-                    let bestSellerPrice = 'Price not available';
-                    if (bestSeller.classification === 'Refill' && bestSeller.refill_price !== null) {
-                        const priceNum = Number(bestSeller.refill_price);
-                        if (!isNaN(priceNum)) {
-                            bestSellerPrice = `₱${priceNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                        }
-                    } else if (bestSeller.classification === 'Bought' && bestSeller.product_price !== null) {
-                        const priceNum = Number(bestSeller.product_price);
-                        if (!isNaN(priceNum)) {
-                            bestSellerPrice = `₱${priceNum.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                        }
-                    }
-                    
-                    document.getElementById('best-seller').innerText = `Best Seller: ${bestSeller.product_name} (${bestSeller.total_sold} units - ${bestSellerPrice} each)`;
-                }
+                return `${row.product_name}: ${row.total_sold} units - ${row.classification} - Price: ${priceDisplay} each`;
+            }).join('<br>');
+            
+            document.getElementById('salesReport').innerHTML = output;
+
+            // Display total gained
+            document.getElementById('totalGained').innerText = `Total Gained: ₱${parseFloat(data.totalGained).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Update the chart with sales data
+            updateChart(data.salesData);
+
+            // Find the best seller
+            if (data.salesData.length > 0) {
+                const bestSeller = data.salesData[0];
+
+                let bestSellerPrice = bestSeller.price !== null && !isNaN(bestSeller.price) 
+                    ? `₱${parseFloat(bestSeller.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : 'Price not available';
+
+                document.getElementById('best-seller').innerText = `Best Seller: ${bestSeller.product_name} (${bestSeller.total_sold} units - ${bestSellerPrice} each)`;
             }
         })
         .catch(error => {
@@ -476,6 +463,8 @@ function fetchSalesData() {
             document.getElementById('salesReport').innerText = 'Failed to load sales data.';
         });
 }
+
+
 
 // Function to update the sales chart
 let salesChart;

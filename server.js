@@ -208,26 +208,35 @@ app.get('/sales-report', (req, res) => {
 
     const query = `
         SELECT 
-            p.ProductName AS product_name, 
-            SUM(o.quantity) AS total_sold,
-            COALESCE(pc.RefillPrice, 0) AS refill_price, 
-            COALESCE(pc.ProductPrice, 0) AS product_price,
-            CASE 
-                WHEN pc.RefillPrice > 0 THEN 'Refill'
-                WHEN pc.ProductPrice > 0 THEN 'Bought'
-                ELSE 'Unknown'
-            END AS classification
-        FROM orders o
-        JOIN productdetails p ON o.product_id = p.Product_ID
-        JOIN productcategories pc ON p.Category_ID = pc.Category_ID
-        WHERE o.Date = ?
-        GROUP BY o.product_id, p.ProductName, pc.RefillPrice, pc.ProductPrice
-        ORDER BY total_sold DESC;
+    p.ProductName AS product_name, 
+    SUM(o.quantity) AS total_sold,
+    CASE 
+        WHEN o.ProductType = 1 THEN COALESCE(pc.RefillPrice, 0)
+        WHEN o.ProductType = 2 THEN COALESCE(pc.ProductPrice, 0)
+        ELSE NULL
+    END AS price,
+    CASE 
+        WHEN o.ProductType = 1 THEN 'Refill'
+        WHEN o.ProductType = 2 THEN 'Bought'
+        ELSE 'Unknown'
+    END AS classification
+FROM orders o
+JOIN productdetails p ON o.product_id = p.Product_ID
+JOIN productcategories pc ON p.Category_ID = pc.Category_ID
+WHERE o.Date = ?
+GROUP BY o.product_id, p.ProductName, o.ProductType, pc.RefillPrice, pc.ProductPrice
+ORDER BY total_sold DESC;
     `;
 
     const totalQuery = `
         SELECT 
-            SUM(o.quantity * COALESCE(pc.RefillPrice, pc.ProductPrice)) AS total_gained
+            SUM(o.quantity * 
+                CASE 
+                    WHEN o.ProductType = 1 THEN pc.RefillPrice
+                    WHEN o.ProductType = 2 THEN pc.ProductPrice
+                    ELSE 0 
+                END
+            ) AS total_gained
         FROM orders o
         JOIN productdetails p ON o.product_id = p.Product_ID
         JOIN productcategories pc ON p.Category_ID = pc.Category_ID
@@ -239,22 +248,22 @@ app.get('/sales-report', (req, res) => {
             return res.status(500).json({ error: err.message });
         }
     
+        console.log('🛠️ DEBUG: Query results before sending to frontend:', JSON.stringify(results, null, 2));
+    
         if (results.length === 0) {
             return res.json({ message: 'No sales data found for the selected date.' });
         }
-
-        // Debug log to see the results
-        console.log('Query results:', JSON.stringify(results, null, 2)); 
-
+    
         db.query(totalQuery, [date], (err, totalResult) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-
+    
             const totalGained = totalResult[0].total_gained || 0;
             res.json({ salesData: results, totalGained });
         });
     });
+    
 });
 
 // Fetch Materials Route
