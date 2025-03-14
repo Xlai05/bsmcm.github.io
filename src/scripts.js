@@ -315,11 +315,14 @@ function fetchSalesData() {
             if (data.message) {
                 document.getElementById('salesReport').innerText = data.message; 
             } else {
-                let output = data.map(row => `${row.product_name}: ${row.total_sold}`).join('<br>');
+                let output = data.salesData.map(row => `${row.product_name}: ${row.total_sold}`).join('<br>');
                 document.getElementById('salesReport').innerHTML = output;
 
+                // Display total gained
+                document.getElementById('totalGained').innerText = `Total Gained: ${data.totalGained}`;
+
                 // Update the chart with the sales data
-                updateChart(data);
+                updateChart(data.salesData);
             }
         })
         .catch(error => console.error('Error fetching data:', error));
