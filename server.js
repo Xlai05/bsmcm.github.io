@@ -324,36 +324,47 @@ app.get("/products", (req, res) => {
 
 // Place Order Route
 app.post("/place-order", (req, res) => {
-    const { customerName, customerContact, customerAddress, product_id, quantity, productType, orderStatus, employee_id } = req.body;
+    const { customerName, customerContact, customerAddress, product_id, quantity, productType, orderStatus } = req.body;
 
-    if (!customerName || !customerContact || !customerAddress || !product_id || !quantity || !productType || !orderStatus || !employee_id) {
+    if (!customerName || !customerContact || !customerAddress || !product_id || !quantity || !productType || !orderStatus) {
         return res.status(400).json({ error: "All fields are required." });
     }
 
-    // First, insert customer if not exists
-    const customerQuery = "INSERT INTO customers (Name, Contact, Address) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Name=VALUES(Name), Contact=VALUES(Contact), Address=VALUES(Address)";
+    console.log(" Debug: Received Order Data:", req.body);
+
+    const customerQuery = `
+        INSERT INTO customers (Name, Contact, Address) 
+        VALUES (?, ?, ?) 
+        ON DUPLICATE KEY UPDATE Name=VALUES(Name), Contact=VALUES(Contact), Address=VALUES(Address)
+    `;
+
     db.query(customerQuery, [customerName, customerContact, customerAddress], (err, result) => {
         if (err) {
-            console.error("Error inserting customer:", err);
+            console.error(" Error inserting customer:", err);
             return res.status(500).json({ error: "Failed to insert customer." });
         }
 
-        const customer_id = result.insertId || result.affectedRows; // Get customer ID
+        const customer_id = result.insertId || result.affectedRows;
+        console.log(" Debug: Inserted/Retrieved Customer ID:", customer_id);
 
-        // Insert order
-        const orderQuery = "INSERT INTO orders (Customer_ID, Total, Date, Employee_ID, product_id, quantity, ProductType) VALUES (?, ?, CURDATE(), ?, ?, ?, ?)";
-        const total = 0; // Placeholder for total, should be calculated based on price
+        const orderQuery = `
+            INSERT INTO orders (Product_ID, Customer_ID, Quantity, ProductType, Status_ID) 
+            VALUES (?, ?, ?, ?, ?)
+        `;
 
-        db.query(orderQuery, [customer_id, total, employee_id, product_id, quantity, productType], (err, orderResult) => {
+        db.query(orderQuery, [product_id, customer_id, quantity, productType, orderStatus], (err, orderResult) => {
             if (err) {
-                console.error("Error placing order:", err);
+                console.error(" Error inserting order:", err);
                 return res.status(500).json({ error: "Failed to place order." });
             }
 
+            console.log(" Debug: Inserted Order ID:", orderResult.insertId);
             res.json({ message: "Order placed successfully!" });
         });
     });
 });
+
+
 
 
 // Start Server

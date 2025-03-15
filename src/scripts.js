@@ -755,15 +755,18 @@ function fetchProducts() {
 }
 
 function submitOrder() {
+    const orderStatus = document.getElementById("orderStatus").value; // Should be 1, 2, or 3
+
+    console.log("Debug: Order Status before sending:", orderStatus); // Check if it's correct
+
     const orderData = {
-        customerName: document.getElementById("customerName").value,
-        customerContact: document.getElementById("customerContact").value,
-        customerAddress: document.getElementById("customerAddress").value,
+        customerName: document.getElementById("customerName").value.trim(),
+        customerContact: document.getElementById("customerContact").value.trim(),
+        customerAddress: document.getElementById("customerAddress").value.trim(),
         product_id: document.getElementById("productSelect").value,
-        quantity: document.getElementById("quantity").value,
+        quantity: parseInt(document.getElementById("quantity").value) || 0,
         productType: document.getElementById("productType").value,
-        orderStatus: document.getElementById("orderStatus").value,
-        employee_id: localStorage.getItem("currentUserID") // Auto-fetch employee ID from local storage
+        orderStatus: orderStatus
     };
 
     fetch("http://localhost:3000/place-order", {
@@ -773,10 +776,29 @@ function submitOrder() {
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
-        document.getElementById("order-form").reset();
-        fetchProducts(); // Refresh product list to update stock
+        console.log("Server Response:", data);
+        if (data.error) {
+            alert(`Error: ${data.error}`);
+        } else {
+            alert(data.message);
+            document.getElementById("order-form-data").reset();
+            fetchProducts(); // Refresh stock
+        }
     })
     .catch(error => console.error("Error placing order:", error));
 }
 
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    fetchProducts();
+
+    const orderForm = document.getElementById("order-form-data");
+    if (orderForm) {
+        orderForm.addEventListener("submit", function (event) {
+            event.preventDefault();
+            submitOrder();
+        });
+    }
+});
