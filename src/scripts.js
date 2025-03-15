@@ -731,16 +731,6 @@ const materialsData = [
 ];
 
 
-
-document.addEventListener("DOMContentLoaded", function () {
-    fetchProducts(); // Load products into dropdown
-
-    document.getElementById("order-form-data").addEventListener("submit", function (event) {
-        event.preventDefault();
-        submitOrder();
-    });
-});
-
 function fetchProducts() {
     fetch("http://localhost:3000/products") // Fetch products from backend
         .then(response => response.json())
